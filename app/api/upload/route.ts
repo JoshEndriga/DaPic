@@ -12,16 +12,22 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Missing data" }, { status: 400 });
     }
 
-    // 1. Upload the image to Vercel Blob
-    // We remove the hardcoded 'public' access to let it use the store default
-    // or you can go to Vercel Dashboard and change store to 'Public'
+    // Calculate expiration date (24 hours from now)
+    const expiresAt = new Date();
+    expiresAt.setHours(expiresAt.getHours() + 24);
+
+    // 1. Upload the image to Vercel Blob with an expiration date
     const blob = await put(filename, request.body, {
-      access: "public", 
-      addRandomSuffix: true, // Prevents overwriting if two people upload "image.png"
+      access: "public",
+      addRandomSuffix: true,
+      expiresAt: expiresAt, // The file will be automatically deleted after 24 hours
     });
 
     // 2. Save the Code and URL to Postgres
     const client = await db.connect();
+    
+    // We include the 'created_at' explicitly if your table uses it, 
+    // but the DB usually handles this automatically.
     await client.sql`
       INSERT INTO pics (code, url)
       VALUES (${code}, ${blob.url});
@@ -30,7 +36,9 @@ export async function POST(request: Request) {
     return NextResponse.json(blob);
   } catch (error) {
     console.error("Upload error:", error);
-    // This will help us see if it's still a permission issue
-    return NextResponse.json({ error: error instanceof Error ? error.message : "Upload failed" }, { status: 500 });
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Upload failed" }, 
+      { status: 500 }
+    );
   }
 }

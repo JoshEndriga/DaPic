@@ -22,6 +22,10 @@ export default function DaPicHome() {
   const [countdown, setCountdown] = useState(5);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // --- History State ---
+  const [showHistory, setShowHistory] = useState(false);
+  const [historyItems, setHistoryItems] = useState<{code: string, timestamp: number}[]>([]);
+
   // --- Dynamic Countdown Hook ---
   useEffect(() => {
     if (isSuccess && countdown > 0) {
@@ -37,6 +41,16 @@ export default function DaPicHome() {
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
   }, [isSuccess, countdown]);
+
+  // --- Load/Cleanup History ---
+  const loadAndCleanupHistory = () => {
+    const saved = JSON.parse(localStorage.getItem("daPicHistory") || "[]");
+    const now = Date.now();
+    // Filter out anything older than 24 hours (86400000 ms)
+    const freshHistory = saved.filter((item: any) => now - item.timestamp < 24 * 60 * 60 * 1000);
+    setHistoryItems(freshHistory);
+    localStorage.setItem("daPicHistory", JSON.stringify(freshHistory));
+  };
 
   // --- Handlers for View Tab ---
   const handleSearch = async (e: React.FormEvent) => {
@@ -106,6 +120,11 @@ export default function DaPicHome() {
       );
 
       if (response.ok) {
+        // --- SAVE TO LOCAL HISTORY ---
+        const newEntry = { code: generatedCode, timestamp: Date.now() };
+        const existing = JSON.parse(localStorage.getItem("daPicHistory") || "[]");
+        localStorage.setItem("daPicHistory", JSON.stringify([newEntry, ...existing].slice(0, 10)));
+        
         setIsSuccess(true);
         setCountdown(5);
       } else {
@@ -129,13 +148,55 @@ export default function DaPicHome() {
   return (
     <div className="relative min-h-screen bg-black text-white font-sans flex flex-col items-center selection:bg-white selection:text-black">
       
-      <header className="sticky top-0 z-[100] w-full py-2 flex justify-center items-center border-b border-zinc-800 bg-black/80 backdrop-blur-lg">
+      <header className="sticky top-0 z-[100] w-full py-2 px-6 flex justify-between items-center border-b border-zinc-800 bg-black/80 backdrop-blur-lg">
+        {/* Placeholder to balance the flexbox */}
+        <div className="w-10"></div> 
+        
         <img 
           src="/logo.png" 
           alt="Da-Pic Logo" 
           className="h-14 w-auto object-contain"
           onError={(e) => { e.currentTarget.style.display = 'none'; }}
         />
+
+        {/* History Section */}
+        <div className="relative">
+          <button 
+            onClick={() => { loadAndCleanupHistory(); setShowHistory(!showHistory); }}
+            className="p-2 text-zinc-500 hover:text-white transition-colors"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/>
+            </svg>
+          </button>
+
+          {showHistory && (
+            <div className="absolute right-0 mt-4 w-64 bg-zinc-900/90 backdrop-blur-xl border border-zinc-800 rounded-lg shadow-2xl z-[110] p-4 animate-in fade-in slide-in-from-top-2">
+              <div className="flex justify-between items-center mb-4 border-b border-zinc-800 pb-2">
+                <span className="text-[10px] font-bold tracking-widest text-zinc-500 uppercase">Your History</span>
+                <button onClick={() => setShowHistory(false)} className="text-zinc-500 hover:text-white text-xs">✕</button>
+              </div>
+              <div className="space-y-2 max-h-60 overflow-y-auto pr-1 custom-scrollbar">
+                {historyItems.length > 0 ? (
+                  historyItems.map((item, idx) => (
+                    <div 
+                      key={idx} 
+                      className="flex justify-between items-center bg-black/40 p-2 rounded border border-zinc-800 hover:border-zinc-600 cursor-pointer transition-all"
+                      onClick={() => { setSearchCode(item.code); setShowHistory(false); setActiveTab("view"); }}
+                    >
+                      <span className="font-mono font-bold text-lg tracking-wider">{item.code}</span>
+                      <span className="text-[9px] text-zinc-600 uppercase">
+                        {new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-[10px] text-zinc-600 italic text-center py-4">No recent uploads found.</p>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
       </header>
 
       <main className="flex-grow flex flex-col items-center w-full max-w-md px-6 pt-8 pb-4">
