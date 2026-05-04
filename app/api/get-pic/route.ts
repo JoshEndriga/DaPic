@@ -10,19 +10,18 @@ export async function GET(request: Request) {
   }
 
   try {
-    // Initialize Neon with your existing POSTGRES_URL
     const sql = neon(process.env.POSTGRES_URL!);
 
-    // 1. Calculate the cutoff time (24 hours ago)
+    // 1. Calculate the cutoff (24 hours ago)
     const twentyFourHoursAgo = new Date();
     twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
+    const cutoff = twentyFourHoursAgo.toISOString();
 
-    // 2. Query the database using the new Neon syntax
-    // Neon handles the template literal safely to prevent SQL injection
+    // 2. Query for code that is NOT expired
     const rows = await sql`
       SELECT url FROM pics 
       WHERE code = ${code} 
-      AND created_at > ${twentyFourHoursAgo.toISOString()}
+      AND created_at > ${cutoff}
       LIMIT 1;
     `;
 
