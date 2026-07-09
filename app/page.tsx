@@ -303,12 +303,19 @@ export default function DaPicHome() {
       </main>
 
       <footer className="w-full pt-0 pb-1 flex justify-center border-t border-zinc-800 bg-black">
-        <img 
-          src="/devlogo.png" 
-          alt="Tw1sT Logo" 
-          className="h-32 w-auto object-contain"
-          onError={(e) => { e.currentTarget.style.display = 'none'; }}
-        />
+        <a 
+          href="https://tw1st-official.carrd.co/" 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          className="inline-block transition-transform hover:scale-105 duration-200"
+        >
+          <img 
+            src="/devlogo.png" 
+            alt="Tw1sT Logo" 
+            className="h-32 w-auto object-contain"
+            onError={(e) => { e.currentTarget.style.display = 'none'; }}
+          />
+        </a>
       </footer>
 
     </div>
