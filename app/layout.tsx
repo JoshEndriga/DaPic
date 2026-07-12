@@ -12,9 +12,9 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-// Updated metadata for Da-Pic
+// Updated metadata for DaPic | Tw1sT
 export const metadata: Metadata = {
-  title: "Da-Pic",
+  title: "DaPic | Tw1sT",
   description: "Secure, ephemeral image sharing.",
   icons: {
     icon: "/favicon.png", // Points to your favicon in the public folder
