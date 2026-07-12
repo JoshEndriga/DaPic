@@ -49,6 +49,13 @@ export default function DaPicHome() {
     }
   }, [isSuccess, countdown]);
 
+  // --- Reset Upload State on Tab Change ---
+  useEffect(() => {
+    if (activeTab === "view") {
+      resetUploadState();
+    }
+  }, [activeTab]);
+
   // --- Load/Cleanup History ---
   const loadAndCleanupHistory = () => {
     const saved = JSON.parse(localStorage.getItem("daPicHistory") || "[]");
