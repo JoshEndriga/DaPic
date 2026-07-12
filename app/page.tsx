@@ -22,6 +22,19 @@ export default function DaPicHome() {
   const [countdown, setCountdown] = useState(5);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // --- Reset Upload State Helper ---
+  const resetUploadState = () => {
+    setUploadImage(null);
+    setPreviewUrl(null);
+    setGeneratedCode(null);
+    setUploadMessage("");
+    setIsSuccess(false);
+    setIsCopied(false);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
   // --- History State ---
   const [showHistory, setShowHistory] = useState(false);
   const [historyItems, setHistoryItems] = useState<{code: string, timestamp: number}[]>([]);
@@ -32,13 +45,7 @@ export default function DaPicHome() {
       const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
       return () => clearTimeout(timer);
     } else if (isSuccess && countdown === 0) {
-      setUploadImage(null);
-      setPreviewUrl(null);
-      setGeneratedCode(null);
-      setUploadMessage("");
-      setIsSuccess(false);
-      setIsCopied(false);
-      if (fileInputRef.current) fileInputRef.current.value = "";
+      resetUploadState();
     }
   }, [isSuccess, countdown]);
 
@@ -208,15 +215,20 @@ export default function DaPicHome() {
               activeTab === "view" ? "border-b-2 border-white text-white" : "text-zinc-500 hover:text-zinc-300"
             }`}
           >
-            VIEW TAB
+            VIEW
           </button>
           <button
-            onClick={() => { setActiveTab("upload"); setIsSuccess(false); setPreviewUrl(null); }}
+            onClick={() => {
+              setActiveTab("upload");
+              if (isSuccess) {
+                resetUploadState();
+              }
+            }}
             className={`flex-1 py-3 text-center text-sm font-semibold tracking-wider transition-colors ${
               activeTab === "upload" ? "border-b-2 border-white text-white" : "text-zinc-500 hover:text-zinc-300"
             }`}
           >
-            UPLOAD TAB
+            UPLOAD
           </button>
         </div>
 
